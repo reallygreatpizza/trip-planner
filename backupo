@@ -1,41 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Pressable, Dimensions, Image } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity, Platform } from 'react-native';
 import {NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import * as SplashScreen from 'expo-splash-screen';
-import cityImage from './images/city.jpg';
-const screenHeight = Dimensions.get('window').height;
-const screenWidth = Dimensions.get('window').width;
-const targetHeight = screenHeight * 0.5;
-const scaleFactor = targetHeight / 1205; // since the original image height is 4032
-const newWidth = 1805 * scaleFactor; // since the original image width is 2268
-const dummyTrips = [
-  {
-    id: '1',
-    destination: 'New York City',
-    dates: '2023-05-10 - 2023-05-15',
-    activities: 'Statue of Liberty, Central Park, Broadway',
-  },
-  {
-    id: '2',
-    destination: 'Paris',
-    dates: '2023-06-01 - 2023-06-10',
-    activities: 'Eiffel Tower, Louvre Museum, Notre Dame',
-  },
-  {
-    id: '3',
-    destination: 'Tokyo',
-    dates: '2023-07-15 - 2023-07-25',
-    activities: 'Shibuya Crossing, Tsukiji Fish Market, Akihabara',
-  },
-];
+/* import * as SQLite from 'expo-sqlite'; */
 
+/* function openDatabase() {
+  if (Platform.OS === "web") {
+    return {
+      transaction: () => {
+        return {
+          executeSql: () => {},
+        };
+      },
+    };
+  }
 
+  const db = SQLite.openDatabase("tripDB.db");
+  return db;
+} */
 
-SplashScreen.preventAutoHideAsync();
-setTimeout(SplashScreen.hideAsync, 2000);
-
-
+/* const db = openDatabase(); */
 const Stack = createStackNavigator();
 
 
@@ -47,6 +31,18 @@ const TripForm = () => {
   const navigation = useNavigation();
 
   const handleSubmit = () => {
+/*     db.transaction((tx) => {
+      tx.executeSql(
+        'INSERT INTO trips (destination, dates, activities) VALUES (?, ?, ?)',
+        [destination, dates, activities],
+        (tx, results) => {
+          console.log('Trip data stored successfully:', results);
+        },
+        error => {
+          console.log('Error storing trip data:', error);
+        }
+      );
+    }); */
 
     // Reset form fields
     setDestination('');
@@ -86,19 +82,36 @@ const TripForm = () => {
           numberOfLines={4}
           isRequired
         />
-                <Pressable
-        style={styles.Button}
-        title="View Recipe"
-        onPress={() => handleSubmit()}
-        ><Text style={styles.ButtonText}>Submit</Text></Pressable>
+        <Button title="Submit" onPress={() => handleSubmit()} />
       </View>
     </View>
   );
 };
 
 const TripsList = () => {
-  const [trips, setTrips] = useState(dummyTrips);
+  const [trips, setTrips] = useState([]);
   const navigation = useNavigation();
+
+/*   useEffect(() => {
+    // Fetch stored trip data from SQLite database
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM trips',
+        [],
+        (_, results) => {
+          const len = results.rows.length;
+          const tripList = [];
+          for (let i = 0; i < len; i++) {
+            tripList.push(results.rows.item(i));
+          }
+          setTrips(tripList);
+        },
+        error => {
+          console.log('Error fetching trip data:', error);
+        }
+      );
+    });
+  }, []); */
 
   const renderTripItem = ({ item }) => (
     <View style={styles.tripItem}>
@@ -120,11 +133,8 @@ const TripsList = () => {
         <FlatList
           data={trips}
           renderItem={renderTripItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => index.toString()}
         />
-      </View>
-      <View style={styles.imageContainer}>
-        <Image source={cityImage} style={{ width: newWidth, height: targetHeight }} />
       </View>
     </View>
   );
@@ -132,11 +142,25 @@ const TripsList = () => {
 
 const App = () => {
 
+/*   useEffect(() => {
+    console.log("we making the table?")
+    db.transaction((tx) => {
+      tx.executeSql(
+        "drop table trips;"
+      );
+      tx.executeSql(
+        "create table if not exists trips (destination text, date text, activities text);"
+      );
+    });
+  }, []);
+ */
+  
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Form">
-        <Stack.Screen name="Form" component={TripForm} options={{ headerTitle: '' }} />
-        <Stack.Screen name="TripsList" component={TripsList} options={{ headerTitle: '' }} />
+        <Stack.Screen name="Form" component={TripForm} />
+        <Stack.Screen name="TripsList" component={TripsList} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -151,7 +175,7 @@ flexDirection: 'row',
 justifyContent: 'space-between',
 alignItems: 'center',
 padding: 20,
-backgroundColor: '#4a00ba',
+backgroundColor: '#4285F4',
 },
 title: {
 fontSize: 24,
@@ -195,27 +219,6 @@ paddingBottom: 10,
 },
 tripItemText: {
 fontSize: 16,
-},
-imageContainer: {
-  width: screenWidth,
-  height: screenHeight * 0.5,
-  overflow: 'hidden',
-  alignItems: 'center',
-},
-Button: {
-  backgroundColor: '#4a00ba',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingVertical: 1,
-  paddingHorizontal: 22,
-  borderRadius: 4,
-  elevation: 3,
-},
-ButtonText: {
-  color: '#ffffff',
-  fontSize: 20,
-  marginTop: 8,
-  marginBottom: 8,
 },
 });
 
